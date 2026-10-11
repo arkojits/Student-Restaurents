@@ -27,10 +27,13 @@ function createRestaurantCard(restaurant) {
   name.textContent = restaurant.name;
 
   const city = document.createElement('p');
-  city.textContent = `City: ${restaurant.city}`;
+  city.textContent = `City: ${restaurant.city || 'Unknown'}`;
 
   const company = document.createElement('p');
-  company.textContent = `Company: ${restaurant.company}`;
+  company.textContent = `Company: ${restaurant.company || 'Unknown'}`;
+
+  const address = document.createElement('p');
+  address.textContent = `Address: ${restaurant.address || 'Not available'}`;
 
   const button = document.createElement('button');
   button.textContent = 'View Menu';
@@ -42,7 +45,7 @@ function createRestaurantCard(restaurant) {
     showDailyMenu();
   });
 
-  card.append(name, city, company, button);
+  card.append(name, city, company, address, button);
 
   return card;
 }
@@ -105,9 +108,9 @@ function filterRestaurants() {
   const selectedCompany = companyFilter.value;
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
-    const matchesSearch = restaurant.name
-      .toLowerCase()
-      .includes(searchValue);
+    const name = restaurant.name?.toLowerCase() || '';
+
+    const matchesSearch = name.includes(searchValue);
 
     const matchesCity =
       selectedCity === '' || restaurant.city === selectedCity;
@@ -127,27 +130,38 @@ async function showDailyMenu() {
     return;
   }
 
-  const menu = await getDailyMenu(selectedRestaurant._id);
+  try {
+    menuContent.innerHTML = '<p>Loading daily menu...</p>';
 
-  menuContent.innerHTML = '<h3>Daily Menu</h3>';
+    const menu = await getDailyMenu(selectedRestaurant._id);
 
-  if (menu.length === 0) {
-    menuContent.innerHTML += '<p>No daily menu available.</p>';
-    return;
+    menuContent.innerHTML = '<h3>Daily Menu</h3>';
+
+    if (!menu.courses || menu.courses.length === 0) {
+      menuContent.innerHTML += '<p>No daily menu available.</p>';
+      return;
+    }
+
+    menu.courses.forEach((item) => {
+      const div = document.createElement('div');
+      div.classList.add('menu-item');
+
+      const name = document.createElement('strong');
+      name.textContent = item.name || 'Meal';
+
+      const price = document.createElement('p');
+      price.textContent = `Price: ${item.price || 'Not available'}`;
+
+      const diets = document.createElement('p');
+      diets.textContent = `Diets: ${item.diets || 'Not specified'}`;
+
+      div.append(name, price, diets);
+      menuContent.appendChild(div);
+    });
+  } catch (error) {
+    console.error(error);
+    menuContent.innerHTML = '<p>Could not load daily menu.</p>';
   }
-
-  menu.forEach((item) => {
-    const div = document.createElement('div');
-    div.classList.add('menu-item');
-
-    div.innerHTML = `
-      <strong>${item.name}</strong>
-      <p>${item.price}</p>
-      <p>${item.diets}</p>
-    `;
-
-    menuContent.appendChild(div);
-  });
 }
 
 async function showWeeklyMenu() {
@@ -155,30 +169,50 @@ async function showWeeklyMenu() {
     return;
   }
 
-  const menu = await getWeeklyMenu(selectedRestaurant._id);
+  try {
+    menuContent.innerHTML = '<p>Loading weekly menu...</p>';
 
-  menuContent.innerHTML = '<h3>Weekly Menu</h3>';
+    const menu = await getWeeklyMenu(selectedRestaurant._id);
 
-  if (menu.length === 0) {
-    menuContent.innerHTML += '<p>No weekly menu available.</p>';
-    return;
+    console.log('Weekly menu response:', menu);
+
+    menuContent.innerHTML = '<h3>Weekly Menu</h3>';
+
+    if (!menu) {
+      menuContent.innerHTML += '<p>No weekly menu available.</p>';
+      return;
+    }
+
+    if (Array.isArray(menu)) {
+      if (menu.length === 0) {
+        menuContent.innerHTML += '<p>No weekly menu available.</p>';
+        return;
+      }
+
+      menu.forEach((item) => {
+        const div = document.createElement('div');
+        div.classList.add('menu-item');
+
+        div.textContent = JSON.stringify(item);
+
+        menuContent.appendChild(div);
+      });
+
+      return;
+    }
+
+    menuContent.innerHTML +=
+      '<p>Weekly menu data received. Check Console for structure.</p>';
+  } catch (error) {
+    console.error(error);
+    menuContent.innerHTML = '<p>Could not load weekly menu.</p>';
   }
-
-  menu.forEach((item) => {
-    const div = document.createElement('div');
-    div.classList.add('menu-item');
-
-    div.innerHTML = `
-      <strong>${item.day}</strong>
-      <p>${item.meal}</p>
-    `;
-
-    menuContent.appendChild(div);
-  });
 }
 
 async function loadRestaurants() {
   try {
+    restaurantList.innerHTML = '<p>Loading restaurants...</p>';
+
     restaurants = await getRestaurants();
 
     displayRestaurants(restaurants);

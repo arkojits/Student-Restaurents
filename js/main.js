@@ -1,0 +1,1 @@
+console.log('Student Restaurants app started');

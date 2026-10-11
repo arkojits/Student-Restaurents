@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Restaurants Finland</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header>
+    <h1>Student Restaurants Finland</h1>
+    <p>Find student restaurants and check daily or weekly menus.</p>
+  </header>
+
+  <main>
+    <section class="filters">
+      <input
+        type="text"
+        id="search"
+        placeholder="Search restaurant..."
+      >
+
+      <select id="city-filter">
+        <option value="">All cities</option>
+      </select>
+    </section>
+
+    <section>
+      <h2>Restaurants</h2>
+      <div id="restaurant-list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

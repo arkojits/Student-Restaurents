@@ -1,36 +1,43 @@
 const baseUrl =
   'https://media2.edu.metropolia.fi/restaurant/api/v1';
 
-export async function getRestaurants() {
-  const response = await fetch(`${baseUrl}/restaurants`);
+async function fetchJson(url, errorMessage) {
+  const response = await fetch(url);
+
+  if (response.status === 404) {
+    return null;
+  }
 
   if (!response.ok) {
-    throw new Error('Could not fetch restaurants');
+    throw new Error(`${errorMessage}: ${response.status}`);
   }
 
   return response.json();
+}
+
+export async function getRestaurants() {
+  const data = await fetchJson(
+    `${baseUrl}/restaurants`,
+    'Could not fetch restaurants'
+  );
+
+  return data || [];
 }
 
 export async function getDailyMenu(id) {
-  const response = await fetch(
-    `${baseUrl}/restaurants/daily/${id}/en`
+  const data = await fetchJson(
+    `${baseUrl}/restaurants/daily/${id}/en`,
+    'Could not fetch daily menu'
   );
 
-  if (!response.ok) {
-    throw new Error('Could not fetch daily menu');
-  }
-
-  return response.json();
+  return data || {courses: []};
 }
 
 export async function getWeeklyMenu(id) {
-  const response = await fetch(
-    `${baseUrl}/restaurants/weekly/${id}/en`
+  const data = await fetchJson(
+    `${baseUrl}/restaurants/weekly/${id}/en`,
+    'Could not fetch weekly menu'
   );
 
-  if (!response.ok) {
-    throw new Error('Could not fetch weekly menu');
-  }
-
-  return response.json();
+  return data;
 }

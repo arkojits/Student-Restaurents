@@ -137,7 +137,7 @@ async function showDailyMenu() {
 
     menuContent.innerHTML = '<h3>Daily Menu</h3>';
 
-    if (!menu.courses || menu.courses.length === 0) {
+    if (!menu || !menu.courses || menu.courses.length === 0) {
       menuContent.innerHTML += '<p>No daily menu available.</p>';
       return;
     }
@@ -160,7 +160,8 @@ async function showDailyMenu() {
     });
   } catch (error) {
     console.error(error);
-    menuContent.innerHTML = '<p>Could not load daily menu.</p>';
+    menuContent.innerHTML =
+      '<h3>Daily Menu</h3><p>Could not load daily menu.</p>';
   }
 }
 
@@ -174,38 +175,53 @@ async function showWeeklyMenu() {
 
     const menu = await getWeeklyMenu(selectedRestaurant._id);
 
-    console.log('Weekly menu response:', menu);
-
     menuContent.innerHTML = '<h3>Weekly Menu</h3>';
 
-    if (!menu) {
+    if (!menu || !menu.days || menu.days.length === 0) {
       menuContent.innerHTML += '<p>No weekly menu available.</p>';
       return;
     }
 
-    if (Array.isArray(menu)) {
-      if (menu.length === 0) {
-        menuContent.innerHTML += '<p>No weekly menu available.</p>';
-        return;
+    menu.days.forEach((day, index) => {
+      const daySection = document.createElement('section');
+      daySection.classList.add('menu-day');
+
+      const heading = document.createElement('h4');
+      heading.textContent = day.date || `Day ${index + 1}`;
+
+      daySection.appendChild(heading);
+
+      if (!day.courses || day.courses.length === 0) {
+        const noMenu = document.createElement('p');
+        noMenu.textContent = 'No menu available for this day.';
+        daySection.appendChild(noMenu);
+      } else {
+        day.courses.forEach((course) => {
+          const item = document.createElement('div');
+          item.classList.add('menu-item');
+
+          const name = document.createElement('strong');
+          name.textContent = course.name || 'Meal';
+
+          const price = document.createElement('p');
+          price.textContent =
+            `Price: ${course.price || 'Not available'}`;
+
+          const diets = document.createElement('p');
+          diets.textContent =
+            `Diets: ${course.diets || 'Not specified'}`;
+
+          item.append(name, price, diets);
+          daySection.appendChild(item);
+        });
       }
 
-      menu.forEach((item) => {
-        const div = document.createElement('div');
-        div.classList.add('menu-item');
-
-        div.textContent = JSON.stringify(item);
-
-        menuContent.appendChild(div);
-      });
-
-      return;
-    }
-
-    menuContent.innerHTML +=
-      '<p>Weekly menu data received. Check Console for structure.</p>';
+      menuContent.appendChild(daySection);
+    });
   } catch (error) {
     console.error(error);
-    menuContent.innerHTML = '<p>Could not load weekly menu.</p>';
+    menuContent.innerHTML =
+      '<h3>Weekly Menu</h3><p>Could not load weekly menu.</p>';
   }
 }
 

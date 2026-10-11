@@ -214,3 +214,25 @@ dialog::backdrop {
     flex-direction: column;
   }
 }
+
+.menu-day {
+  margin-top: 24px;
+}
+
+.menu-day h4 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  border-bottom: 2px solid #222;
+  padding-bottom: 6px;
+}
+
+.menu-day {
+  margin-top: 24px;
+}
+
+.menu-day h4 {
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #222;
+  font-size: 18px;
+}

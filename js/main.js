@@ -7,6 +7,7 @@ import {
 const restaurantList = document.querySelector('#restaurant-list');
 const searchInput = document.querySelector('#search');
 const cityFilter = document.querySelector('#city-filter');
+const companyFilter = document.querySelector('#company-filter');
 
 const dialog = document.querySelector('#menu-dialog');
 const closeDialog = document.querySelector('#close-dialog');
@@ -61,7 +62,13 @@ function displayRestaurants(list) {
 }
 
 function createCityFilter() {
-  const cities = [...new Set(restaurants.map((restaurant) => restaurant.city))];
+  const cities = [
+    ...new Set(
+      restaurants
+        .map((restaurant) => restaurant.city)
+        .filter(Boolean)
+    ),
+  ];
 
   cities.sort();
 
@@ -73,9 +80,29 @@ function createCityFilter() {
   });
 }
 
+function createCompanyFilter() {
+  const companies = [
+    ...new Set(
+      restaurants
+        .map((restaurant) => restaurant.company)
+        .filter(Boolean)
+    ),
+  ];
+
+  companies.sort();
+
+  companies.forEach((company) => {
+    const option = document.createElement('option');
+    option.value = company;
+    option.textContent = company;
+    companyFilter.appendChild(option);
+  });
+}
+
 function filterRestaurants() {
-  const searchValue = searchInput.value.toLowerCase();
+  const searchValue = searchInput.value.toLowerCase().trim();
   const selectedCity = cityFilter.value;
+  const selectedCompany = companyFilter.value;
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
     const matchesSearch = restaurant.name
@@ -85,16 +112,29 @@ function filterRestaurants() {
     const matchesCity =
       selectedCity === '' || restaurant.city === selectedCity;
 
-    return matchesSearch && matchesCity;
+    const matchesCompany =
+      selectedCompany === '' ||
+      restaurant.company === selectedCompany;
+
+    return matchesSearch && matchesCity && matchesCompany;
   });
 
   displayRestaurants(filteredRestaurants);
 }
 
 async function showDailyMenu() {
+  if (!selectedRestaurant) {
+    return;
+  }
+
   const menu = await getDailyMenu(selectedRestaurant._id);
 
   menuContent.innerHTML = '<h3>Daily Menu</h3>';
+
+  if (menu.length === 0) {
+    menuContent.innerHTML += '<p>No daily menu available.</p>';
+    return;
+  }
 
   menu.forEach((item) => {
     const div = document.createElement('div');
@@ -111,9 +151,18 @@ async function showDailyMenu() {
 }
 
 async function showWeeklyMenu() {
+  if (!selectedRestaurant) {
+    return;
+  }
+
   const menu = await getWeeklyMenu(selectedRestaurant._id);
 
   menuContent.innerHTML = '<h3>Weekly Menu</h3>';
+
+  if (menu.length === 0) {
+    menuContent.innerHTML += '<p>No weekly menu available.</p>';
+    return;
+  }
 
   menu.forEach((item) => {
     const div = document.createElement('div');
@@ -129,14 +178,22 @@ async function showWeeklyMenu() {
 }
 
 async function loadRestaurants() {
-  restaurants = await getRestaurants();
+  try {
+    restaurants = await getRestaurants();
 
-  displayRestaurants(restaurants);
-  createCityFilter();
+    displayRestaurants(restaurants);
+    createCityFilter();
+    createCompanyFilter();
+  } catch (error) {
+    console.error(error);
+    restaurantList.innerHTML =
+      '<p>Could not load restaurants.</p>';
+  }
 }
 
 searchInput.addEventListener('input', filterRestaurants);
 cityFilter.addEventListener('change', filterRestaurants);
+companyFilter.addEventListener('change', filterRestaurants);
 
 dailyButton.addEventListener('click', showDailyMenu);
 weeklyButton.addEventListener('click', showWeeklyMenu);
